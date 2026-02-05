@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telekom Müşteri Churn Tahmini</title>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+            color: #333333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .page {
+            background: white;
+            padding: 0 0 30px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            background-color: #34495e;
+            color: #ecf0f1;
+            text-align: center;
+            margin: 0 0 20px 0;
+            padding: 25px;
+            border-radius: 12px 12px 0 0;
+            font-weight: 300;
+        }
+
+        form {
+            padding: 0 30px;
+        }
+
+        .form-section {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            color: #4a90e2;
+            margin-top: 0;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        select,
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            background-color: #fafafa;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: #4a90e2;
+            outline: none;
+            background-color: white;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        #result {
+            margin: 20px 30px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .result-title {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .risk-low {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .risk-medium {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .risk-high {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <h1>Müşteri Churn Analizi</h1>
+
+        <form id="customerForm">
+
+            <div class="form-section">
+                <h3 class="section-title">👤 Demografik Bilgiler</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cinsiyet</label>
+                        <select name="gender" required>
+                            <option value="Male">Erkek</option>
+                            <option value="Female">Kadın</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Yaşlı Vatandaş (65+)</label>
+                        <select name="SeniorCitizen" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Partner</label>
+                        <select name="Partner" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bakmakla Yükümlü Olduğu Kişi</label>
+                        <select name="Dependents" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">🌐 Hizmet ve Abonelik Detayları</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Abonelik Süresi (Ay)</label>
+                        <input type="number" name="tenure" min="0" max="72" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Telefon Hizmeti</label>
+                        <select name="PhoneService" required>
+                            <option value="Yes">Evet</option>
+                            <option value="No">Hayır</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Çoklu Hat</label>
+                        <select name="MultipleLines" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                            <option value="No phone service">Telefon hizmeti yok</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>İnternet Hizmeti</label>
+                        <select name="InternetService" required>
+                            <option value="Fiber optic">Fiber Optik</option>
+                            <option value="DSL">DSL</option>
+                            <option value="No">Yok</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Çevrimiçi Güvenlik</label>
+                        <select name="OnlineSecurity" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                            <option value="No internet service">İnternet hizmeti yok</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Yedekleme Hizmeti</label>
+                        <select name="OnlineBackup" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                            <option value="No internet service">İnternet hizmeti yok</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cihaz Koruma</label>
+                        <select name="DeviceProtection" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                            <option value="No internet service">İnternet hizmeti yok</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Teknik Destek</label>
+                        <select name="TechSupport" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                            <option value="No internet service">İnternet hizmeti yok</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>TV Yayını</label>
+                        <select name="StreamingTV" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                            <option value="No internet service">İnternet hizmeti yok</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Film Yayını</label>
+                        <select name="StreamingMovies" required>
+                            <option value="No">Hayır</option>
+                            <option value="Yes">Evet</option>
+                            <option value="No internet service">İnternet hizmeti yok</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">💳 Fatura ve Ödeme Bilgileri</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Sözleşme Tipi</label>
+                        <select name="Contract" required>
+                            <option value="Month-to-month">Aydan aya</option>
+                            <option value="One year">1 Yıllık</option>
+                            <option value="Two year">2 Yıllık</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Kağıtsız Fatura</label>
+                        <select name="PaperlessBilling" required>
+                            <option value="Yes">Evet</option>
+                            <option value="No">Hayır</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Ödeme Yöntemi</label>
+                        <select name="PaymentMethod" required>
+                            <option value="Electronic check">Elektronik Çek</option>
+                            <option value="Mailed check">Posta Çeki</option>
+                            <option value="Bank transfer (automatic)">Banka Transferi</option>
+                            <option value="Credit card (automatic)">Kredi Kartı</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Aylık Ücret</label>
+                        <input type="number" name="MonthlyCharges" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Toplam Ücret</label>
+                        <input type="number" name="TotalCharges" step="0.01" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Tahmin Et</button>
+        </form>
+
+        <div id="result">
+            <div class="result-title">Churn Olasılığı</div>
+            <div class="result-value" id="probabilityValue">--</div>
+            <div id="confidenceInterval" style="margin-top:6px; font-size:13px; color:#555;"></div>
+            <div id="riskLevel" style="margin-top: 5px; font-weight: 500;">--</div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('customerForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            data.tenure = parseInt(data.tenure);
+            data.MonthlyCharges = parseFloat(data.MonthlyCharges);
+            data.TotalCharges = parseFloat(data.TotalCharges);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                showResult(result);
+
+            } catch (error) {
+                console.error('Hata:', error);
+                alert('Tahmin sırasında bir hata oluştu!');
+            }
+        });
+
+        function showResult(result) {
+            const resultDiv = document.getElementById('result');
+            const probValueDiv = document.getElementById('probabilityValue');
+            const riskLevelDiv = document.getElementById('riskLevel');
+            const ciDiv = document.getElementById('confidenceInterval');
+
+            const probability = result.churn_probability;
+            const percentage = (probability * 100).toFixed(2);
+
+            probValueDiv.textContent = `%${percentage}`;
+
+
+            if (result.ci_lower !== undefined && result.ci_upper !== undefined) {
+                const lo = (result.ci_lower * 100).toFixed(2);
+                const hi = (result.ci_upper * 100).toFixed(2);
+                ciDiv.textContent = `%${result.ci_level} Güven Aralığı: %${lo} – %${hi}`;
+            } else {
+                ciDiv.textContent = '';
+            }
+
+
+            resultDiv.className = '';
+            let riskText = '';
+            let riskClass = '';
+
+            if (probability < 0.40) {
+                riskText = 'Düşük Risk - Müşteri Memnun Görünüyor';
+                riskClass = 'risk-low';
+            } else if (probability < 0.70) {
+                riskText = 'Orta Risk - Müşteri Kaybedilebilir';
+                riskClass = 'risk-medium';
+            } else {
+                riskText = 'Yüksek Risk - Müşteri Kaybı Olasılığı Yüksek';
+                riskClass = 'risk-high';
+            }
+
+            riskLevelDiv.textContent = riskText;
+            resultDiv.classList.add(riskClass);
+            resultDiv.style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+
+    </script>
+</body>
+
+</html>
